@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:xml/xml.dart';
 
 void main() {
   runApp(const MainApp());
@@ -16,6 +17,8 @@ class MainApp extends StatefulWidget {
 
 class _MainAppState extends State<MainApp> {
   File? xmlFile = null;
+  XmlDocument? xmlDocument = null;
+  List<String> tracks = [];
 
   @override
   Widget build(BuildContext context) {
@@ -47,9 +50,13 @@ class _MainAppState extends State<MainApp> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Hello World!'),
             TextButton(onPressed: pickFile, child: Text("Open XML")),
             Text('Selected file: ${xmlFile?.path}'),
+            Expanded(
+                child: ListView.builder(
+                    itemCount: tracks.length,
+                    itemBuilder: (context, index) =>
+                        Text("Index: $index, title: ${tracks[index]}")))
           ],
         ),
       ),
@@ -74,6 +81,21 @@ class _MainAppState extends State<MainApp> {
 
     setState(() {
       xmlFile = files[0];
+      xmlDocument = XmlDocument.parse(xmlFile?.readAsStringSync() ?? "");
+      print(xmlDocument?.firstElementChild
+          ?.getElement('COLLECTION')
+          ?.children
+          .getRange(0, 5)
+          .toList());
+      tracks = [
+        xmlDocument?.firstElementChild
+                ?.getElement('COLLECTION')
+                ?.children
+                .toList()[1]
+                .getAttribute("Name")
+                .toString() ??
+            ""
+      ];
     });
   }
 }
